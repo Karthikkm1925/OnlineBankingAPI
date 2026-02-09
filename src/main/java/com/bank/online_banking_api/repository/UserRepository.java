@@ -1,7 +1,8 @@
 package com.bank.online_banking_api.repository;
 
-import com.bank.online_banking_api.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.bank.online_banking_api.entity.User;
 
 import java.util.Optional;
 

@@ -1,8 +1,8 @@
 package com.bank.online_banking_api.controller;
 
-import com.bank.online_banking_api.dto.request.AmountRequest;
-import com.bank.online_banking_api.dto.request.CreateAccountRequest;
-import com.bank.online_banking_api.dto.response.AccountResponse;
+import com.bank.online_banking_api.dto.auth.AccountResponse;
+import com.bank.online_banking_api.dto.auth.AmountRequest;
+import com.bank.online_banking_api.dto.auth.CreateAccountRequest;
 import com.bank.online_banking_api.entity.Account;
 import com.bank.online_banking_api.services.AccountService;
 import jakarta.validation.Valid;

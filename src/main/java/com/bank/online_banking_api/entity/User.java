@@ -3,7 +3,6 @@ package com.bank.online_banking_api.entity;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,9 +30,10 @@ public class User {
 
     @Column(nullable = false)
     private String password;
-
+    
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String role; 
+    private Role role; 
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     @JsonIgnore

@@ -1,4 +1,4 @@
-package com.bank.online_banking_api.dto.auth;
+package com.bank.online_banking_api.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

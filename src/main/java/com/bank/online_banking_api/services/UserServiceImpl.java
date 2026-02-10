@@ -3,14 +3,15 @@ package com.bank.online_banking_api.services;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.bank.online_banking_api.dto.auth.LoginRequest;
-import com.bank.online_banking_api.dto.auth.LoginResponse;
-import com.bank.online_banking_api.dto.auth.RegisterRequest;
-import com.bank.online_banking_api.dto.auth.RegisterResponse;
+import com.bank.online_banking_api.dto.LoginRequest;
+import com.bank.online_banking_api.dto.LoginResponse;
+import com.bank.online_banking_api.dto.RegisterRequest;
+import com.bank.online_banking_api.dto.RegisterResponse;
 import com.bank.online_banking_api.entity.Role;
 import com.bank.online_banking_api.entity.User;
 import com.bank.online_banking_api.exception.BusinessException;
 import com.bank.online_banking_api.repository.UserRepository;
+import com.bank.online_banking_api.security.JwtUtil;
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,7 +21,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-
+    private final JwtUtil jwtUtil;
     @Override
     public RegisterResponse register(RegisterRequest request) {
 
@@ -53,12 +54,16 @@ public class UserServiceImpl implements UserService {
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new BusinessException("Invalid email or password");
         }
-
+        String token = jwtUtil.generateToken(
+                user.getEmail(),
+                user.getRole().name()
+        );
+        
         LoginResponse response = new LoginResponse();
         response.setUserId(user.getId());
         response.setEmail(user.getEmail());
         response.setRole(user.getRole());
-
+        response.setToken(token);
         return response;
     }
 }

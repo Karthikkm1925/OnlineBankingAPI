@@ -1,4 +1,4 @@
-package com.bank.online_banking_api.config;
+package com.bank.online_banking_api.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

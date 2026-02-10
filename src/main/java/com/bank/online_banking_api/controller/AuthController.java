@@ -6,10 +6,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.bank.online_banking_api.dto.auth.LoginRequest;
-import com.bank.online_banking_api.dto.auth.LoginResponse;
-import com.bank.online_banking_api.dto.auth.RegisterRequest;
-import com.bank.online_banking_api.dto.auth.RegisterResponse;
+import com.bank.online_banking_api.dto.LoginRequest;
+import com.bank.online_banking_api.dto.LoginResponse;
+import com.bank.online_banking_api.dto.RegisterRequest;
+import com.bank.online_banking_api.dto.RegisterResponse;
 import com.bank.online_banking_api.services.UserService;
 import org.springframework.web.bind.annotation.RequestBody;
 import jakarta.validation.Valid;

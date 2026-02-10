@@ -1,4 +1,4 @@
-package com.bank.online_banking_api.dto.auth;
+package com.bank.online_banking_api.dto;
 
 import com.bank.online_banking_api.entity.Role;
 
@@ -11,4 +11,5 @@ public class LoginResponse {
     private Long userId;
     private String email;
     private Role role;
+    private String token;
 }

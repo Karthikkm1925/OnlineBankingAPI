@@ -16,4 +16,12 @@ spring:
         dialect: org.hibernate.dialect.MySQL8Dialect
 
 server:
-  port: 5570
+  port: 5570	
+
+jwt:
+  secret: bank-secret-key-should-be-256-bit-minimum
+  expiration: 3600000  
+
+logging:
+  level:
+    org.springframework.security: DEBUG

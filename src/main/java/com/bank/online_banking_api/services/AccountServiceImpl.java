@@ -9,32 +9,36 @@ import com.bank.online_banking_api.repository.AccountRepository;
 import com.bank.online_banking_api.repository.TransactionRepository;
 import com.bank.online_banking_api.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class AccountServiceImpl implements AccountService {
 
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
     private final TransactionRepository transactionRepository;
 
-    public AccountServiceImpl(AccountRepository accountRepository,
-                              UserRepository userRepository,
-                              TransactionRepository transactionRepository) {
-        this.accountRepository = accountRepository;
-        this.userRepository = userRepository;
-        this.transactionRepository = transactionRepository;
-    }
-
     @Override
-    public Account createAccount(Long userId, String accountType) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new  ResourceNotFoundException("User not found"));
+    @PreAuthorize("hasRole('USER')")
+    public Account createAccount(String accountType) {
+
+        String email = getCurrentUserEmail();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         Account account = Account.builder()
                 .accountNumber(UUID.randomUUID().toString())
@@ -45,18 +49,45 @@ public class AccountServiceImpl implements AccountService {
 
         return accountRepository.save(account);
     }
-
+    private String getCurrentUserEmail() {
+        Authentication authentication = SecurityContextHolder
+                .getContext()
+                .getAuthentication();
+        return authentication.getName();
+    }
+    
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<Account> getAllAccounts() {
+        return accountRepository.findAll();
+    }
+       
+    private Account getAccountForCurrentUser(String accountNumber) {
+
+        String email = getCurrentUserEmail();
+
+        return accountRepository
+                .findByAccountNumberAndUserEmail(accountNumber, email)
+                .orElseThrow(() -> new BusinessException("Unauthorized account access"));
+    }
+    
+    @Override
+    @PreAuthorize("hasRole('USER')")
     public Account deposit(String accountNumber, BigDecimal amount) {
-        Account account = getAccount(accountNumber);
+    	
+    	if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+    	    throw new BusinessException("Amount must be greater than zero");
+    	}
+        Account account =  getAccountForCurrentUser(accountNumber);
         account.setBalance(account.getBalance().add(amount));
         saveTransaction(account, "DEPOSIT", amount);
         return accountRepository.save(account);
     }
 
     @Override
+    @PreAuthorize("hasRole('USER')")
     public Account withdraw(String accountNumber, BigDecimal amount) {
-        Account account = getAccount(accountNumber);
+        Account account =  getAccountForCurrentUser(accountNumber);
 
         if (account.getBalance().compareTo(amount) < 0) {
             throw new  BusinessException("Insufficient balance");
@@ -68,15 +99,32 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @PreAuthorize("hasRole('USER')")
     public void transfer(String fromAccount, String toAccount, BigDecimal amount) {
-        withdraw(fromAccount, amount);
-        deposit(toAccount, amount);
+
+        Account source = getAccountForCurrentUser(fromAccount);
+        
+        if (fromAccount.equals(toAccount)) {
+            throw new BusinessException("Cannot transfer to same account");
+        }
+        
+        if (source.getBalance().compareTo(amount) < 0) {
+            throw new BusinessException("Insufficient balance");
+        }
+
+        Account destination = accountRepository.findByAccountNumber(toAccount)
+                .orElseThrow(() -> new ResourceNotFoundException("Destination account not found"));
+
+        source.setBalance(source.getBalance().subtract(amount));
+        destination.setBalance(destination.getBalance().add(amount));
+
+        saveTransaction(source, "TRANSFER_OUT", amount);
+        saveTransaction(destination, "TRANSFER_IN", amount);
+
+        accountRepository.save(source);
+        accountRepository.save(destination);
     }
 
-    private Account getAccount(String accountNumber) {
-        return accountRepository.findByAccountNumber(accountNumber)
-                .orElseThrow(() -> new  ResourceNotFoundException("Account not found"));
-    }
 
     private void saveTransaction(Account account, String type, BigDecimal amount) {
         Transaction transaction = Transaction.builder()
@@ -87,5 +135,17 @@ public class AccountServiceImpl implements AccountService {
                 .build();
 
         transactionRepository.save(transaction);
+    }
+    
+    @Override
+    @PreAuthorize("hasRole('USER')")
+    public Page<Transaction> getTransactions(String accountNumber, int page, int size) {
+
+        Account account = getAccountForCurrentUser(accountNumber);
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        return transactionRepository
+                .findByAccountIdOrderByTimestampDesc(account.getId(), pageable);
     }
 }

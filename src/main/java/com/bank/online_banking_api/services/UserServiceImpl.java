@@ -1,5 +1,8 @@
 package com.bank.online_banking_api.services;
 
+import java.util.List;
+
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -65,5 +68,11 @@ public class UserServiceImpl implements UserService {
         response.setRole(user.getRole());
         response.setToken(token);
         return response;
+    }
+    
+    @Override
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
     }
 }

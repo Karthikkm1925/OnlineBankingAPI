@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 
 @Configuration
 @RequiredArgsConstructor
+@EnableMethodSecurity
 public class SecurityConfig {
 	
 	private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -39,7 +41,9 @@ public class SecurityConfig {
                     "/v3/api-docs/**",
                     "/swagger-ui/**",
                     "/swagger-ui.html"
-                ).permitAll().requestMatchers("/api/v1/accounts/**").authenticated()
+                ).permitAll()
+                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/v1/accounts/**").hasAnyRole("USER", "ADMIN")
                 .anyRequest().authenticated()
             )
             .addFilterBefore(
